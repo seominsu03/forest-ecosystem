@@ -3,7 +3,7 @@
 class Animal {
   private static final int WANDER_TURN_STEPS = 12;
   private static final int SATED_CYCLE_STEPS = 40;
-  private static final float MAX_WANDER_TURN = (float) Math.toRadians(25);
+  private static final float MAX_WANDER_TURN = 25.0f * DEG_TO_RAD;
   private static final float SATED_ENERGY = 85;
   private static final float SATED_SPEED_FACTOR = 0.6f;
   final long id;
