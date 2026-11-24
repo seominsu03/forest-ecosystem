@@ -4,3 +4,10 @@ interface ViewDataSource {
   SimulationSnapshot snapshot();
   void submit(SimulationRequest request);
 }
+
+// 출생·사망을 빠짐없이 전달하는 선택적 연결 경로다. 기존 ViewDataSource도 유지한다.
+interface PopulationDataSource extends ViewDataSource {
+  PopulationInitialState initialPopulation();
+  // 최초 요청 커서는 -1이다. 0부터 시작하는 사건도 포함해 반환한다.
+  List<PopulationEvent> populationEventsAfter(long eventId);
+}

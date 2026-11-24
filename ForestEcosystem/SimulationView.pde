@@ -7,6 +7,10 @@ class SimulationView {
     color(245, 236, 208), color(130, 108, 88), color(219, 150, 79),
     color(173, 110, 61), color(98, 122, 160), color(239, 187, 49)
   };
+  final PopulationHistory history = new PopulationHistory();
+  final PopulationDashboard dashboard = new PopulationDashboard(speciesNames, speciesColors);
+  int selectedTab = 0;
+  int pressedTab = -1;
   SimulationSnapshot latest;
   long selectedId = -1;
   long displayedRun = -1;
@@ -26,10 +30,12 @@ class SimulationView {
     sourceLabel = label;
     selectedId = -1;
     displayedRun = -1;
+    history.clear();
   }
 
-  void render(SimulationSnapshot snapshot) {
+  void render(SimulationSnapshot snapshot, ViewDataSource source) {
     latest = Objects.requireNonNull(snapshot, "snapshot");
+    history.update(snapshot, source);
     if (displayedRun != snapshot.runId) {
       selectedId = -1;
       pressed = false;
@@ -105,12 +111,7 @@ class SimulationView {
     text(sourceLabel, width - 18, 11);
     text("배율 " + nf(camera.zoom, 1, 2) + "   ·   지도 "
         + nf(snapshot.mapWidth, 1, 0) + " × " + nf(snapshot.mapHeight, 1, 0), width - 18, 37);
-    noStroke();
-    fill(33, 59, 43, 220);
-    rect(14, 80, 235, 34, 6);
-    fill(255);
-    textAlign(LEFT, CENTER);
-    text("동물 " + snapshot.animals.size() + "마리  ·  풀 " + snapshot.activePlantCount + "개", 26, 97);
+    dashboard.drawSmallPyramid(snapshot);
   }
 
   void drawPanel(AnimalSnapshot selected) {
@@ -119,11 +120,18 @@ class SimulationView {
     rect(900, 65, 300, 675);
     fill(38, 64, 46);
     textAlign(LEFT, TOP);
-    textSize(20);
-    text("개체 정보", 920, 84);
+    dashboard.drawTabs(selectedTab);
+    if (selectedTab == 1) {
+      dashboard.drawGraph(history, latest);
+      return;
+    }
+    if (selectedTab == 2) {
+      dashboard.drawPyramid(latest);
+      return;
+    }
     textSize(13);
     if (selected == null) {
-      text("지도에서 동물을 클릭하세요.", 920, 125);
+      text("지도에서 동물을 클릭하세요.", 920, 134);
     } else {
       textSize(18);
       text(speciesNames[selected.species.ordinal()] + "  #" + selected.id, 920, 123);
@@ -185,6 +193,7 @@ class SimulationView {
   }
 
   void press(float x, float y) {
+    pressedTab = dashboard.tabAt(x, y);
     pressed = camera.contains(x, y) && !overMapLabel(x, y);
     dragged = false;
     pressX = lastDragX = x;
@@ -201,6 +210,14 @@ class SimulationView {
   }
 
   void release(float x, float y) {
+    if (pressedTab >= 0) {
+      if (pressedTab == dashboard.tabAt(x, y) && dist(x, y, pressX, pressY) < 5) {
+        selectedTab = pressedTab;
+      }
+      pressedTab = -1;
+      pressed = false;
+      return;
+    }
     if (pressed && !dragged && dist(x, y, pressX, pressY) >= 5) {
       drag(x, y);
     }
@@ -214,6 +231,7 @@ class SimulationView {
         float distance = dist(x, y, position.x, position.y);
         if (distance < nearest) {
           selectedId = animal.id;
+          selectedTab = 0;
           nearest = distance;
         }
       }
@@ -222,7 +240,7 @@ class SimulationView {
   }
 
   boolean overMapLabel(float x, float y) {
-    return x >= 14 && x <= 249 && y >= 80 && y <= 114;
+    return x >= 14 && x <= 220 && y >= 80 && y <= 192;
   }
 
   void wheel(float x, float y, float count) {

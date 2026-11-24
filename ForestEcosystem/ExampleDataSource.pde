@@ -1,6 +1,7 @@
 // 담당 B. A의 생태 계산과 분리된 화면 개발용 정적 배치다.
-class ExampleDataSource implements ViewDataSource {
+class ExampleDataSource implements PopulationDataSource {
   final SimulationSnapshot current;
+  final PopulationInitialState initial;
   final ArrayList<SimulationRequest> pendingRequests = new ArrayList<SimulationRequest>();
 
   ExampleDataSource(MapScene scene) {
@@ -36,6 +37,7 @@ class ExampleDataSource implements ViewDataSource {
       animals, plants, counts, plants.size(),
       new DisasterSnapshot(DisasterType.NONE, 0, 0, 0, 0, 0)
     );
+    initial = new PopulationInitialState(current.runId, counts);
   }
 
   PVector landPosition(java.util.Random sample, MapScene scene) {
@@ -48,6 +50,14 @@ class ExampleDataSource implements ViewDataSource {
 
   public SimulationSnapshot snapshot() {
     return current;
+  }
+
+  public PopulationInitialState initialPopulation() {
+    return initial;
+  }
+
+  public List<PopulationEvent> populationEventsAfter(long eventId) {
+    return Collections.emptyList();
   }
 
   public void submit(SimulationRequest request) {

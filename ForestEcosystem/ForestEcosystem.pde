@@ -22,7 +22,7 @@ void connectViewDataSource(ViewDataSource source, String label) {
 }
 
 void draw() {
-  simulationView.render(viewDataSource.snapshot());
+  simulationView.render(viewDataSource.snapshot(), viewDataSource);
 }
 
 void mousePressed() {
