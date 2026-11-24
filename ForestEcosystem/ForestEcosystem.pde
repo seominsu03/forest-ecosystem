@@ -1,5 +1,8 @@
-// 담당 B. A와 함께 프로그램 진입점의 연결을 관리한다.
-// 구현 기준은 ../문서/개발가이드.md를 따른다.
+// 담당 B. 실제 데이터 연결 시 A와 프로그램 진입점의 호출 순서를 맞춘다.
+import processing.event.MouseEvent;
+
+ViewDataSource viewDataSource;
+SimulationView simulationView;
 
 void settings() {
   size(1200, 740);
@@ -7,14 +10,40 @@ void settings() {
 
 void setup() {
   surface.setTitle("Forest Ecosystem");
-  textFont(createFont("Malgun Gothic", 18));
-  noLoop();
+  textFont(createFont("Malgun Gothic", 16));
+  frameRate(60);
+  noSmooth();
+  MapScene scene = new MapScene();
+  simulationView = new SimulationView(scene);
+  connectViewDataSource(new ExampleDataSource(scene), "예시 데이터 · 정적 배치");
+}
+
+// A가 ViewDataSource를 구현한 어댑터를 전달하면 같은 표시 경로를 사용한다.
+void connectViewDataSource(ViewDataSource source, String label) {
+  viewDataSource = Objects.requireNonNull(source, "source");
+  simulationView.setSourceLabel(label);
 }
 
 void draw() {
-  background(235, 241, 233);
-  fill(35, 58, 42);
-  textAlign(CENTER, CENTER);
-  text("한국 숲 생태계 시뮬레이션", width / 2, height / 2 - 20);
-  text("프로젝트 기본 파일 준비 완료", width / 2, height / 2 + 20);
+  simulationView.render(viewDataSource.snapshot());
+}
+
+void mousePressed() {
+  if (mouseButton == LEFT) simulationView.press(mouseX, mouseY);
+}
+
+void mouseDragged() {
+  simulationView.drag(mouseX, mouseY);
+}
+
+void mouseReleased() {
+  simulationView.release(mouseX, mouseY);
+}
+
+void mouseWheel(MouseEvent event) {
+  simulationView.wheel(mouseX, mouseY, event.getCount());
+}
+
+void keyPressed() {
+  if (key == 'r' || key == 'R') simulationView.camera.reset();
 }

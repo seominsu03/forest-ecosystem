@@ -1,0 +1,4 @@
+Kenney Roguelike/RPG Pack
+https://kenney.nl/assets/roguelike-rpg-pack
+CC0
+Sprites cropped from roguelikeSheet_transparent.png (16x16 tiles, 1px spacing).
