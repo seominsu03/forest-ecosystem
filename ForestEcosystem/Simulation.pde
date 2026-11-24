@@ -5,6 +5,8 @@ class Simulation {
   private final EcosystemConfig config = new EcosystemConfig();
   private final List<Animal> animals = new ArrayList<Animal>();
   private final List<Plant> plants = new ArrayList<Plant>();
+  private final SpatialGrid<Plant> plantGrid = new SpatialGrid<Plant>();
+  private final List<Plant> nearbyPlants = new ArrayList<Plant>();
   private final Map<Species, Integer> counts = new EnumMap<Species, Integer>(Species.class);
   private final DisasterSnapshot noDisaster = new DisasterSnapshot(DisasterType.NONE, 0, 0, 0, 0, 0);
   private long lastRunId, runId, step;
@@ -87,7 +89,9 @@ class Simulation {
       }
     }
     for (int index = 0; index < EcosystemConfig.INITIAL_PLANTS; index++) {
-      plants.add(new Plant(index + 1L));
+      Plant plant = new Plant(index + 1L);
+      plants.add(plant);
+      plantGrid.add(plant, plant.x, plant.y);
     }
     initialPopulation = new PopulationInitialState(runId, counts);
     state = SimulationState.RUNNING;
@@ -96,6 +100,8 @@ class Simulation {
   private void reset() {
     animals.clear();
     plants.clear();
+    plantGrid.clear();
+    nearbyPlants.clear();
     counts.clear();
     initialPopulation = null;
     startSettings = null;
@@ -108,6 +114,14 @@ class Simulation {
 
   private void advanceStep() {
     step++;
+    for (Animal animal : animals) {
+      Plant target = null;
+      if (animal.eatsGrassAsPrimaryFood()) {
+        plantGrid.collectNearby(animal.x, animal.y, animal.profile.visionRange, nearbyPlants);
+        target = animal.nearestVisiblePlant(nearbyPlants);
+      }
+      animal.move(target);
+    }
   }
 
   private SimulationSnapshot captureSnapshot() {
