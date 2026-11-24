@@ -1,0 +1,4 @@
+# Previous documents and local backup archives
+/문서/[0-9][0-9]-*.md
+/문서-통합전-백업*.zip
+/인터렉티브 문서.zip
