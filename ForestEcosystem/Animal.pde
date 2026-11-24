@@ -34,6 +34,21 @@ class Animal {
     return species != Species.LEOPARD_CAT && species != Species.MARTEN;
   }
 
+  void spendEnergy() {
+    float rate = eatsGrassAsPrimaryFood() ? 0.8f : 1.0f;
+    energy = max(0, energy - (float) (rate * EcosystemConfig.STEP_SECONDS));
+  }
+
+  boolean eatGrassIfInReach(Plant plant) {
+    if (plant == null || !plant.active || energy >= SATED_ENERGY) return false;
+    float dx = plant.x - x;
+    float dy = plant.y - y;
+    if (dx * dx + dy * dy > 1.5f * 1.5f) return false;
+    energy = min(EcosystemConfig.MAX_ENERGY, energy + 22);
+    state = AnimalState.EAT;
+    return true;
+  }
+
   Plant nearestVisiblePlant(List<Plant> candidates) {
     Plant nearest = null;
     float nearestDistanceSquared = Float.POSITIVE_INFINITY;

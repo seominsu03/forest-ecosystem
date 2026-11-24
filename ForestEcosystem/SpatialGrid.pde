@@ -20,6 +20,10 @@ class SpatialGrid<T> {
     cells.get(cellIndex(y, rows) * columns + cellIndex(x, columns)).add(item);
   }
 
+  void remove(T item, float x, float y) {
+    cells.get(cellIndex(y, rows) * columns + cellIndex(x, columns)).remove(item);
+  }
+
   void collectNearby(float x, float y, float range, List<T> candidates) {
     candidates.clear();
     int firstColumn = cellIndex(x - range, columns);

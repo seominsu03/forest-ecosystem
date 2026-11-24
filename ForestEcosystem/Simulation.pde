@@ -114,13 +114,21 @@ class Simulation {
 
   private void advanceStep() {
     step++;
+    for (Plant plant : plants) {
+      if (plant.regrowIfDue(step)) plantGrid.add(plant, plant.x, plant.y);
+    }
     for (Animal animal : animals) {
+      animal.spendEnergy();
       Plant target = null;
       if (animal.eatsGrassAsPrimaryFood()) {
         plantGrid.collectNearby(animal.x, animal.y, animal.profile.visionRange, nearbyPlants);
         target = animal.nearestVisiblePlant(nearbyPlants);
       }
       animal.move(target);
+      if (animal.eatGrassIfInReach(target)) {
+        target.consume(step);
+        plantGrid.remove(target, target.x, target.y);
+      }
     }
   }
 
