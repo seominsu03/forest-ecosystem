@@ -4,15 +4,12 @@ import processing.event.MouseEvent;
 ViewDataSource viewDataSource;
 SimulationView simulationView;
 
-void settings() {
-  size(1200, 740);
-}
-
 void setup() {
+  size(1200, 740);
+  noSmooth();
   surface.setTitle("Forest Ecosystem");
   textFont(createFont("Malgun Gothic", 16));
   frameRate(60);
-  noSmooth();
   MapScene scene = new MapScene();
   simulationView = new SimulationView(scene);
   connectViewDataSource(new ExampleDataSource(scene), "예시 데이터 · 정적 배치");
