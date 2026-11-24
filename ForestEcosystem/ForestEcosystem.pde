@@ -3,6 +3,7 @@ import processing.event.MouseEvent;
 
 ViewDataSource viewDataSource;
 SimulationView simulationView;
+SimulationDataSource simulationDataSource;
 
 void setup() {
   size(1200, 740);
@@ -12,7 +13,8 @@ void setup() {
   frameRate(60);
   MapScene scene = new MapScene();
   simulationView = new SimulationView(scene);
-  connectViewDataSource(new ExampleDataSource(scene), "예시 데이터 · 정적 배치");
+  simulationDataSource = new SimulationDataSource();
+  connectViewDataSource(simulationDataSource, "실제 시뮬레이션 · 이동과 풀 섭취");
 }
 
 // A가 ViewDataSource를 구현한 어댑터를 전달하면 같은 표시 경로를 사용한다.
@@ -22,6 +24,7 @@ void connectViewDataSource(ViewDataSource source, String label) {
 }
 
 void draw() {
+  if (viewDataSource == simulationDataSource) simulationDataSource.advanceToNow();
   simulationView.render(viewDataSource.snapshot(), viewDataSource);
 }
 
