@@ -2,7 +2,7 @@
 class PopulationDashboard {
   final String[] names;
   final int[] colors;
-  final String[] tabs = {"개체 정보", "그래프", "피라미드"};
+  final String[] tabs = {"개체 정보", "그래프", "피라미드", "설정"};
 
   PopulationDashboard(String[] names, int[] colors) {
     this.names = names;
@@ -11,7 +11,7 @@ class PopulationDashboard {
 
   int tabAt(float x, float y) {
     if (y < 78 || y >= 112 || x < 912 || x >= 1188) return -1;
-    return (int)((x - 912) / 92);
+    return (int)((x - 912) / 69);
   }
 
   void drawTabs(int selected) {
@@ -20,9 +20,9 @@ class PopulationDashboard {
     for (int i = 0; i < tabs.length; i++) {
       noStroke();
       fill(i == selected ? color(54, 91, 64) : color(225, 230, 216));
-      rect(912 + i * 92, 78, 88, 34, 5);
+      rect(912 + i * 69, 78, 65, 34, 5);
       fill(i == selected ? color(255) : color(40, 65, 46));
-      text(tabs[i], 956 + i * 92, 95);
+      text(tabs[i], 944.5f + i * 69, 95);
     }
     textAlign(LEFT, TOP);
   }

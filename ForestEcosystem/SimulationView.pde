@@ -2,6 +2,7 @@
 class SimulationView {
   final Camera2D camera = new Camera2D(0, 65, 900, 675, 200, 150);
   final MapScene scene;
+  final AnimalSprites animalSprites = new AnimalSprites();
   final String[] speciesNames = {"멧토끼", "대륙밭쥐", "노루", "고라니", "삵", "담비"};
   final int[] speciesColors = {
     color(245, 236, 208), color(130, 108, 88), color(219, 150, 79),
@@ -9,6 +10,9 @@ class SimulationView {
   };
   final PopulationHistory history = new PopulationHistory();
   final PopulationDashboard dashboard = new PopulationDashboard(speciesNames, speciesColors);
+  final SimulationControls controls = new SimulationControls();
+  ViewDataSource currentSource;
+  SimulationState displayedState;
   int selectedTab = 0;
   int pressedTab = -1;
   SimulationSnapshot latest;
@@ -28,6 +32,8 @@ class SimulationView {
 
   void setSourceLabel(String label) {
     sourceLabel = label;
+    controls.clearConnection();
+    displayedState = null;
     selectedId = -1;
     displayedRun = -1;
     history.clear();
@@ -35,7 +41,19 @@ class SimulationView {
 
   void render(SimulationSnapshot snapshot, ViewDataSource source) {
     latest = Objects.requireNonNull(snapshot, "snapshot");
-    history.update(snapshot, source);
+    currentSource = source;
+    controls.connect(snapshot, source);
+    if (snapshot.state == SimulationState.READY) history.clear();
+    else history.update(snapshot, source);
+    if (snapshot.state == SimulationState.READY && displayedState != SimulationState.READY) {
+      selectedId = -1;
+      pressed = false;
+      pressedTab = -1;
+      controls.pressedButton = -1;
+      history.clear();
+      camera.reset();
+    }
+    displayedState = snapshot.state;
     if (displayedRun != snapshot.runId) {
       selectedId = -1;
       pressed = false;
@@ -67,6 +85,7 @@ class SimulationView {
 
   void drawAnimal(AnimalSnapshot animal) {
     int index = animal.species.ordinal();
+    if (!animalSprites.draw(animal)) {
     pushMatrix();
     translate(animal.x, animal.y);
     rotate(animal.directionRadians);
@@ -81,11 +100,12 @@ class SimulationView {
     }
     if (index >= 4) line(-1.1f, 0, -2.2f, 0.4f);
     popMatrix();
+    }
     if (animal.id == selectedId) {
       noFill();
       stroke(255, 255, 245);
       strokeWeight(2 / camera.pixelsPerUnit());
-      ellipse(animal.x, animal.y, 4.8f, 4.8f);
+      ellipse(animal.x, animal.y, 6.8f, 6.8f);
     }
   }
 
@@ -105,12 +125,9 @@ class SimulationView {
     textAlign(LEFT, TOP);
     textSize(20);
     text("한국 숲 · 관찰 지도", 20, 10);
-    textSize(12);
-    text("드래그 이동   휠 확대·축소   동물 클릭   R 카메라 초기화", 20, 39);
-    textAlign(RIGHT, TOP);
-    text(sourceLabel, width - 18, 11);
-    text("배율 " + nf(camera.zoom, 1, 2) + "   ·   지도 "
-        + nf(snapshot.mapWidth, 1, 0) + " × " + nf(snapshot.mapHeight, 1, 0), width - 18, 37);
+    textSize(11);
+    text("드래그 이동 · 휠 확대 · 동물 클릭 · R 카메라 초기화", 20, 43);
+    controls.drawToolbar();
     dashboard.drawSmallPyramid(snapshot);
   }
 
@@ -127,6 +144,13 @@ class SimulationView {
     }
     if (selectedTab == 2) {
       dashboard.drawPyramid(latest);
+      return;
+    }
+    if (selectedTab == 3) {
+      controls.drawSettings();
+      fill(80, 96, 75);
+      textSize(10);
+      text(sourceLabel, 920, 716);
       return;
     }
     textSize(13);
@@ -165,7 +189,9 @@ class SimulationView {
     }
     textSize(12);
     fill(91, 101, 87);
-    text("동물은 종별 도형으로 표시합니다.\n강과 호수는 배경 배치 예시입니다.", 920, 672);
+    String note = selected == null ? "대체 이미지는 종·행동 규칙에 영향 없음"
+      : "표시 이미지: " + animalSprites.substituteName(selected.species);
+    text(note + "\n이미지 누락 시 도형으로 표시합니다.", 920, 672);
   }
 
   void statBar(String label, float value, float maximum, float y, int barColor) {
@@ -193,6 +219,11 @@ class SimulationView {
   }
 
   void press(float x, float y) {
+    if (controls.press(x, y, selectedTab == 3)) {
+      pressed = false;
+      pressedTab = -1;
+      return;
+    }
     pressedTab = dashboard.tabAt(x, y);
     pressed = camera.contains(x, y) && !overMapLabel(x, y);
     dragged = false;
@@ -210,6 +241,12 @@ class SimulationView {
   }
 
   void release(float x, float y) {
+    // 클릭 직전 최신 상태로 요청 가능 여부를 다시 판단한다.
+    if (currentSource != null) controls.connect(currentSource.snapshot(), currentSource);
+    if (controls.release(x, y, selectedTab == 3)) {
+      pressed = false;
+      return;
+    }
     if (pressedTab >= 0) {
       if (pressedTab == dashboard.tabAt(x, y) && dist(x, y, pressX, pressY) < 5) {
         selectedTab = pressedTab;
